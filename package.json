@@ -1,0 +1,23 @@
+{
+  "name": "employeetracker",
+  "version": "1.0.0",
+  "description": "Command line employee management tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandyboon/employeeTracker.git"
+  },
+  "author": "Sandy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sandyboon/employeeTracker/issues"
+  },
+  "homepage": "https://github.com/sandyboon/employeeTracker#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "mysql2": "^2.1.0"
+  }
+}
