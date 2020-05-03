@@ -3,6 +3,11 @@ const mysql = require('mysql2/promise');
 const connectionPool = require('./dbConnection');
 const cTable = require('console.table');
 
+/*Constants defining table names */
+const DEPARTMENT = 'department';
+const ROLE = 'role';
+const EMPLOYEE = 'employee';
+
 class EmployeeDB {
   static poolInitialized = false;
   constructor(dbConnectionPool) {
@@ -12,7 +17,92 @@ class EmployeeDB {
     const [rows] = await this.pool.execute(
       `SELECT COUNT(1) AS COUNT FROM ${tableName}`
     );
+    return rows;
+  }
+
+  async getAllRecords(tableName) {
+    const [rows] = await this.pool.execute(`SELECT * FROM ${tableName}`);
     console.table(rows);
+    return rows;
+  }
+
+  async viewAllEmployees() {
+    const [rows] = await this.pool
+      .execute(`SELECT EMP1.id, EMP1.first_name, EMP1.last_name, title, name AS department, salary, 
+      CONCAT( EMP2.first_name, ' ', EMP2.last_name) as manager 
+      FROM employee AS EMP1 
+      LEFT JOIN employee EMP2 on EMP1.manager_id = EMP2.id 
+      JOIN role on EMP1.role_id = role.id 
+      JOIN department on role.department_id = department.id ORDER BY EMP1.id`);
+    console.table(rows);
+    return rows;
+  }
+
+  async viewEmployee(empId) {
+    const [rows] = await this.pool.execute(
+      `SELECT EMP1.id, EMP1.first_name, EMP1.last_name, title, name AS department, salary, 
+      CONCAT( EMP2.first_name, ' ', EMP2.last_name) as manager 
+      FROM employee AS EMP1 
+      LEFT JOIN employee EMP2 on EMP1.manager_id = EMP2.id 
+      JOIN role on EMP1.role_id = role.id 
+      JOIN department on role.department_id = department.id WHERE EMP1.id = ? `,
+      [empId]
+    );
+    console.table(rows);
+    return rows;
+  }
+
+  async getRecordById(tableName, id) {
+    const [
+      rows,
+    ] = await this.pool.execute(`SELECT * FROM ${tableName} WHERE id= ?`, [id]);
+    console.table(rows);
+    return rows;
+  }
+
+  async insertDepartment(departmentName) {
+    const [
+      rows,
+    ] = await this.pool.execute(`INSERT INTO ${DEPARTMENT} (name) VALUES (?)`, [
+      departmentName,
+    ]);
+    const insertedRow = await this.getRecordById(DEPARTMENT, rows.insertId);
+    return insertedRow;
+  }
+
+  async insertRole({ title, salary, department_id }) {
+    const [rows] = await this.pool.execute(
+      `INSERT INTO ${ROLE} (title,
+      salary,
+      department_id) VALUES (?,?,?)`,
+      [title, salary, department_id]
+    );
+    const insertedRow = await this.getRecordById(ROLE, rows.insertId);
+    return insertedRow;
+  }
+
+  async insertEmployee({ first_name, last_name, role_id, manager_id }) {
+    const [
+      rows,
+    ] = await this.pool.execute(
+      `INSERT INTO ${EMPLOYEE} (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
+      [first_name, last_name, role_id, manager_id]
+    );
+    const insertedRow = await this.getRecordById(EMPLOYEE, rows.insertId);
+    return insertedRow;
+  }
+
+  async updateEmployeeRole(empId, newRoleId) {
+    const [
+      rows,
+    ] = await this.pool.execute(
+      `UPDATE ${EMPLOYEE} SET role_id = ? WHERE id = ?`,
+      [newRoleId, empId]
+    );
+    console.log('Updated row ---->');
+    const updatedRow = await this.getRecordById(EMPLOYEE, empId);
+    // console.log('-----------------------------------------');
+    // return insertedRow;
   }
 
   async closePool() {
