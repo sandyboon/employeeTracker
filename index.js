@@ -1,14 +1,34 @@
+const inquirer = require('inquirer');
+
 const connectionPool = require('./dbConnection');
-const employeeDatabase = require('./emplyeeDB');
+const EmployeeDatabase = require('./emplyeeDB');
+const Responder = require('./lib/responder');
+const questions = require('./lib/questions');
+const colorCode = require('./lib/consoleColors');
+
+let employeeDB;
+let responderInstance;
 
 async function init() {
-  let employeeDB = null;
+  showWelcomeMessage();
+  const connectionPoolInstance = await connectionPool(
+    await getDbUserName(),
+    await getMySQLPassword()
+  );
+
   try {
-    employeeDB = new employeeDatabase(await connectionPool('root', 'password'));
-    await employeeDB.getRowCount('department');
-    await employeeDB.getAllRecords('employee');
-    await employeeDB.updateEmployeeRole(2, 1);
-    await employeeDB.viewEmployee(2);
+    employeeDB = new EmployeeDatabase(connectionPoolInstance);
+    responderInstance = new Responder(employeeDB);
+    let userResponse = await getUserResponse();
+    while (userWantsToContinue(userResponse)) {
+      userResponse = await getUserResponse();
+      await responderInstance.parseUserChoice(userResponse);
+    }
+    //
+    // ;
+    // await employeeDB.getAllRecords('employee');
+    // await employeeDB.updateEmployeeRole(2, 1);
+    // await employeeDB.viewEmployee(2);
     /*try {
       const newDepartement = 'kaamkaaj7';
       await employeeDB.insertDepartment(newDepartement);
@@ -61,5 +81,51 @@ async function init() {
     if (employeeDB !== null) employeeDB.closePool();
   }
 }
+
+function userWantsToContinue(userResponse) {
+  return userResponse.choices !== questions.possibleActions.QUIT;
+}
+
+async function getUserResponse() {
+  return await inquirer.prompt(
+    questions.getQuestions(
+      await haveDeptBeenDefined(),
+      await haveRolesBeenDefined()
+    )
+  );
+}
+
+async function haveRolesBeenDefined() {
+  const rolesCount = await employeeDB.getRowCount('role');
+  return rolesCount > 0;
+}
+
+async function haveDeptBeenDefined() {
+  const deptCount = await employeeDB.getRowCount('department');
+  return deptCount > 0;
+}
+
+async function getDbUserName() {
+  const { userName } = await inquirer.prompt(questions.userNameQuestion);
+  return userName;
+}
+
+/**
+ * Prompt the user for their mysql password.
+ */
+async function getMySQLPassword() {
+  const { dbPassword } = await inquirer.prompt(questions.passwordQuestion);
+  return dbPassword;
+}
+
+function showWelcomeMessage() {
+  console.log(
+    colorCode.green,
+    '************Welcome to the Employee Tracker System**************'
+  );
+  console.log(colorCode.white);
+}
+
+function parseUserChoice() {}
 
 init();

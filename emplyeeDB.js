@@ -1,6 +1,5 @@
 /**Module to connect to DB and fire all sorts of queries on DB */
 const mysql = require('mysql2/promise');
-const connectionPool = require('./dbConnection');
 const cTable = require('console.table');
 
 /*Constants defining table names */
@@ -17,12 +16,18 @@ class EmployeeDB {
     const [rows] = await this.pool.execute(
       `SELECT COUNT(1) AS COUNT FROM ${tableName}`
     );
-    return rows;
+    return rows[0].COUNT;
   }
 
   async getAllRecords(tableName) {
     const [rows] = await this.pool.execute(`SELECT * FROM ${tableName}`);
     console.table(rows);
+    return rows;
+  }
+
+  async getAllDeptNames() {
+    const [rows] = await this.pool.execute(`SELECT name FROM ${DEPARTMENT}`);
+    // console.log('names is : ' + rows.map((dept) => dept.name));
     return rows;
   }
 
