@@ -19,11 +19,12 @@ async function init() {
   try {
     employeeDB = new EmployeeDatabase(connectionPoolInstance);
     responderInstance = new Responder(employeeDB);
-    let userResponse = await getUserResponse();
-    while (userWantsToContinue(userResponse)) {
+    let userResponse;
+    do {
       userResponse = await getUserResponse();
-      await responderInstance.parseUserChoice(userResponse);
-    }
+      await responderInstance.respondToUserChoice(userResponse);
+    } while (userWantsToContinue(userResponse));
+
     //
     // ;
     // await employeeDB.getAllRecords('employee');

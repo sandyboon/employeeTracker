@@ -21,7 +21,6 @@ class EmployeeDB {
 
   async getAllRecords(tableName) {
     const [rows] = await this.pool.execute(`SELECT * FROM ${tableName}`);
-    console.table(rows);
     return rows;
   }
 
@@ -43,6 +42,21 @@ class EmployeeDB {
     return rows;
   }
 
+  async viewAllRoles() {
+    const [rows] = await this.pool
+      .execute(`SELECT role.*, department.name as department FROM role JOIN department ON role.department_id = department.id 
+      order by role.id`);
+    return rows;
+  }
+
+  async getEmployeesWithRole() {
+    const [rows] = await this.pool.execute(`
+    SELECT employee.id, concat(first_name, last_name) AS name, role.title, department.name AS department 
+    FROM employee join role ON employee.role_id = role.id JOIN
+    department ON department.id = role.department_id ORDER BY employee.id;`);
+    return rows;
+  }
+
   async viewEmployee(empId) {
     const [rows] = await this.pool.execute(
       `SELECT EMP1.id, EMP1.first_name, EMP1.last_name, title, name AS department, salary, 
@@ -61,7 +75,6 @@ class EmployeeDB {
     const [
       rows,
     ] = await this.pool.execute(`SELECT * FROM ${tableName} WHERE id= ?`, [id]);
-    console.table(rows);
     return rows;
   }
 
