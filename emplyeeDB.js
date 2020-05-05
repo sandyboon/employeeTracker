@@ -50,9 +50,20 @@ class EmployeeDB {
 
   async getEmployeesWithRole() {
     const [rows] = await this.pool.execute(`
-    SELECT employee.id, concat(first_name, last_name) AS name, role.title, department.name AS department 
+    SELECT employee.id, concat(first_name, ' ',  last_name) AS name, role.title, department.name AS department 
     FROM employee join role ON employee.role_id = role.id JOIN
     department ON department.id = role.department_id ORDER BY employee.id`);
+    return rows;
+  }
+
+  async getEmployeesWithManager() {
+    const [rows] = await this.pool.execute(`
+    SELECT employee.id, concat(employee.first_name, ' ', employee.last_name) AS name, role.title, department.name AS department,
+ concat(E2.first_name, ' ', E2.last_name) AS manager
+    FROM employee join role ON employee.role_id = role.id JOIN
+    department ON department.id = role.department_id
+    LEFT JOIN employee E2 ON employee.manager_id = E2.id
+    ORDER BY employee.id`);
     return rows;
   }
 
@@ -66,7 +77,6 @@ class EmployeeDB {
       JOIN department on role.department_id = department.id WHERE EMP1.id = ? `,
       [empId]
     );
-    console.table(rows);
     return rows;
   }
 
@@ -117,6 +127,16 @@ class EmployeeDB {
       [newRoleId, empId]
     );
     return await this.getRecordById(EMPLOYEE, empId);
+  }
+
+  async updateEmployeeManager({ empId, newManagerId }) {
+    const [
+      rows,
+    ] = await this.pool.execute(
+      `UPDATE ${EMPLOYEE} SET manager_id = ? WHERE id = ?`,
+      [newManagerId, empId]
+    );
+    return await this.viewEmployee(empId);
   }
 
   async closePool() {
