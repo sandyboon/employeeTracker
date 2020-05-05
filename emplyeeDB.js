@@ -53,7 +53,7 @@ class EmployeeDB {
     const [rows] = await this.pool.execute(`
     SELECT employee.id, concat(first_name, last_name) AS name, role.title, department.name AS department 
     FROM employee join role ON employee.role_id = role.id JOIN
-    department ON department.id = role.department_id ORDER BY employee.id;`);
+    department ON department.id = role.department_id ORDER BY employee.id`);
     return rows;
   }
 
@@ -110,17 +110,14 @@ class EmployeeDB {
     return insertedRow;
   }
 
-  async updateEmployeeRole(empId, newRoleId) {
+  async updateEmployeeRole({ empId, newRoleId }) {
     const [
       rows,
     ] = await this.pool.execute(
       `UPDATE ${EMPLOYEE} SET role_id = ? WHERE id = ?`,
       [newRoleId, empId]
     );
-    console.log('Updated row ---->');
-    const updatedRow = await this.getRecordById(EMPLOYEE, empId);
-    // console.log('-----------------------------------------');
-    // return insertedRow;
+    return await this.getRecordById(EMPLOYEE, empId);
   }
 
   async closePool() {
