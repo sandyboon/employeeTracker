@@ -38,7 +38,6 @@ class EmployeeDB {
       LEFT JOIN employee EMP2 on EMP1.manager_id = EMP2.id 
       JOIN role on EMP1.role_id = role.id 
       JOIN department on role.department_id = department.id ORDER BY EMP1.id`);
-    console.table(rows);
     return rows;
   }
 
